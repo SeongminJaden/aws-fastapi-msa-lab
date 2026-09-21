@@ -1,0 +1,37 @@
+services:
+  products:
+    build:
+      context: .
+      args:
+        SERVICE: products
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+  orders:
+    build:
+      context: .
+      args:
+        SERVICE: orders
+    environment:
+      PRODUCT_URL: http://products:8000
+      DB_PATH: /data/orders.db
+    volumes:
+      - orders-data:/data
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
+    depends_on:
+      products:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+volumes:
+  orders-data:
