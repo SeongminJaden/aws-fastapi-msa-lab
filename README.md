@@ -6,6 +6,8 @@ KANT PA · 이성민 튜터 | AWS·DevOps 특강 실습
 
 비공개 저장소이므로 GitHub에서 접근 권한을 받은 계정으로 로그인합니다. Docker Desktop 설치 후 실행을 완료하고 Linux 컨테이너 엔진이 준비된 상태에서 진행합니다.
 
+Windows에서 관리자 권한 승인 때문에 설치가 종료되면 설치 프로그램의 **현재 사용자용(Per-user)** 설치를 선택합니다. 이미 WSL 2가 준비된 PC에서는 관리자 권한 없이 설치할 수 있습니다. 설치 후 열려 있던 터미널을 다시 열어 `docker version`으로 Client와 Server가 모두 표시되는지 확인합니다.
+
 ```sh
 gh auth login
 gh repo clone SeongminJaden/aws-fastapi-msa-lab
@@ -23,6 +25,18 @@ docker compose down
 ```
 
 `smoke.py`는 주문 한 건을 생성하는 실제 동작 검사입니다. Python이 없는 PC에서는 Swagger로 같은 검사를 할 수 있습니다. EC2에는 아래 파일 전송 방식으로 배포하면 GitHub 토큰을 서버에 저장할 필요가 없습니다. 저장소 접근 권한 없이 HTTPS clone을 시도하면 404 또는 인증 오류가 날 수 있습니다.
+
+### 실행 검증 기록 (2026-09-21)
+
+Windows WSL 2 · Docker Desktop 4.91.0 · Docker Engine 29.8.0 · Compose 5.5.1에서 확인했습니다.
+
+- 이미지 빌드와 `docker compose up -d --build --wait` 성공, 두 서비스 healthy
+- 실제 HTTP 상품 조회 → 주문 생성 201(10,000원) → 주문 조회 200
+- 수량 0은 422, 없는 상품은 404
+- 상품 컨테이너 중지 시 새 주문은 503, 기존 주문 조회는 200
+- `docker compose up -d --force-recreate --wait` 후 기존 주문 보존 및 상품 조회 정상
+
+로컬 Swagger 주소는 http://127.0.0.1:8000/docs 입니다. EC2 배포 절차는 아래에 제공하며, AWS 인스턴스에서의 실행 검증은 아직 수행하지 않았습니다.
 
 **목표:** 상품과 주문 API를 별도 컨테이너로 실행하고, 같은 Compose 설정을 EC2에 올려 주문을 생성합니다. Python 기초와 HTTP 요청·응답을 아는 수강생을 대상으로 합니다.
 
